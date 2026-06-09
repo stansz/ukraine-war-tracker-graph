@@ -1,0 +1,1493 @@
+{
+  "nodes": [
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Project overview for the Ukraine War Tracker \u2014 an automated data pipeline tracking equipment losses, casualties, OSINT, military infrastructure, missile attacks, cyber threats, and news. Covers live DB status (15 tables, 722K+ rows), pipeline schedule, deployment info, and quick commands.",
+      "tags": [
+        "documentation",
+        "entry-point",
+        "overview"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:DEPLOY.md",
+      "type": "document",
+      "name": "DEPLOY.md",
+      "filePath": "DEPLOY.md",
+      "summary": "Infrastructure and deployment guide covering the Hetzner VPS host, Podman Quadlet configuration for the PostgreSQL 16 container, database management commands, active fetcher scripts, backup procedures, and existing services that must remain undisturbed.",
+      "tags": [
+        "documentation",
+        "deployment",
+        "infrastructure"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:PLAYBOOK.md",
+      "type": "document",
+      "name": "PLAYBOOK.md",
+      "filePath": "PLAYBOOK.md",
+      "summary": "Comprehensive project playbook documenting 8 automated data sources, full infrastructure inventory (9 containers on Hetzner VPS), pipeline cron schedule, database schema conventions for 15 tables, quick reference commands, Mattermost notifications, known issues, and future roadmap.",
+      "tags": [
+        "documentation",
+        "operations",
+        "reference"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:SOURCES.md",
+      "type": "document",
+      "name": "SOURCES.md",
+      "filePath": "SOURCES.md",
+      "summary": "Research catalog of all evaluated and potential data sources for the Ukraine war tracker, organized by category: API-accessible sources (CISA KEV, OSM, WarSpotting, casualties, VIINA, missiles), RSS/analysis feeds, OSINT dashboards, Telegram channels, tech-specific analysis, energy infrastructure, and economic/sanctions data.",
+      "tags": [
+        "documentation",
+        "data-pipeline",
+        "reference"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:deploy/backload_warspotting.py",
+      "type": "file",
+      "name": "backload_warspotting.py",
+      "filePath": "deploy/backload_warspotting.py",
+      "summary": "One-time historical backload script that iterates from Feb 24 2022 to today, fetching all WarSpotting equipment loss data page-by-page with rate limiting, and bulk-inserting into PostgreSQL via psycopg2 execute_values with ON CONFLICT deduplication.",
+      "tags": [
+        "data-pipeline",
+        "etl",
+        "equipment-losses",
+        "backfill",
+        "utility"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Uses psycopg2.extras.execute_values for efficient bulk INSERT; hardcoded DB credentials for standalone deployment."
+    },
+    {
+      "id": "function:deploy/backload_warspotting.py:fetch_page",
+      "type": "function",
+      "name": "fetch_page",
+      "filePath": "deploy/backload_warspotting.py",
+      "lineRange": [
+        30,
+        39
+      ],
+      "summary": "Fetches a single page of Russian equipment losses from the WarSpotting API for a given date and page number, returning a list of loss dictionaries.",
+      "tags": [
+        "api-client",
+        "data-fetch",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:deploy/backload_warspotting.py:fetch_date",
+      "type": "function",
+      "name": "fetch_date",
+      "filePath": "deploy/backload_warspotting.py",
+      "lineRange": [
+        42,
+        66
+      ],
+      "summary": "Fetches all paginated loss records for a single date by repeatedly calling fetch_page until no more results or a 404 is received.",
+      "tags": [
+        "pagination",
+        "data-fetch",
+        "api-client"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:deploy/backload_warspotting.py:insert_losses",
+      "type": "function",
+      "name": "insert_losses",
+      "filePath": "deploy/backload_warspotting.py",
+      "lineRange": [
+        69,
+        99
+      ],
+      "summary": "Bulk-inserts equipment loss records into the equipment_losses table using execute_values with ON CONFLICT DO NOTHING for idempotency.",
+      "tags": [
+        "database",
+        "bulk-insert",
+        "data-pipeline"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:deploy/schema.sql:sources",
+      "type": "table",
+      "name": "sources",
+      "filePath": "deploy/schema.sql",
+      "summary": "Registry of data sources (name, URL, description, category, format, active flag) referenced by all data tables via foreign key.",
+      "tags": [
+        "database",
+        "reference-data",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:deploy/schema.sql:equipment_losses",
+      "type": "table",
+      "name": "equipment_losses",
+      "filePath": "deploy/schema.sql",
+      "summary": "Stores individual equipment loss records from WarSpotting with loss ID, equipment type, model, status, date, location, unit, geo coordinates, tags, and raw JSON.",
+      "tags": [
+        "database",
+        "equipment-losses",
+        "schema"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:deploy/schema.sql:casualties",
+      "type": "table",
+      "name": "casualties",
+      "filePath": "deploy/schema.sql",
+      "summary": "Stores daily Russian casualty figures by category (tanks, artillery, personnel, etc.) with cumulative totals and daily changes.",
+      "tags": [
+        "database",
+        "casualties",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:deploy/schema.sql:tech_mentions",
+      "type": "table",
+      "name": "tech_mentions",
+      "filePath": "deploy/schema.sql",
+      "summary": "Stores technology/system mentions extracted from RSS and OSINT sources, capturing tech domain, system name, context, and category.",
+      "tags": [
+        "database",
+        "technology",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:deploy/schema.sql:territory_updates",
+      "type": "table",
+      "name": "territory_updates",
+      "filePath": "deploy/schema.sql",
+      "summary": "Tracks territorial control changes with settlement, oblast, change type, direction, and report URL references.",
+      "tags": [
+        "database",
+        "territory",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:deploy/schema.sql:missile_attacks",
+      "type": "table",
+      "name": "missile_attacks",
+      "filePath": "deploy/schema.sql",
+      "summary": "Records missile and drone attack events with attack date, target type, region, missile/drone counts, and damage level.",
+      "tags": [
+        "database",
+        "missile-attacks",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:deploy/schema.sql:daily_summaries",
+      "type": "table",
+      "name": "daily_summaries",
+      "filePath": "deploy/schema.sql",
+      "summary": "Aggregated daily summary table combining total losses, new losses in 24h, casualties, tech mentions, territory changes, and missile attacks into a single row per date.",
+      "tags": [
+        "database",
+        "aggregation",
+        "schema"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:deploy/schema.sql",
+      "type": "table",
+      "name": "schema.sql",
+      "filePath": "deploy/schema.sql",
+      "summary": "Core PostgreSQL schema defining 7 tables (sources, equipment_losses, casualties, tech_mentions, territory_updates, missile_attacks, daily_summaries) with foreign keys to sources and 12 performance indexes.",
+      "tags": [
+        "database",
+        "schema",
+        "migration",
+        "infrastructure"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "PostgreSQL 16 schema using JSONB for raw data storage, TIMESTAMPTZ for timestamps, and ON CONFLICT for idempotent upserts."
+    },
+    {
+      "id": "config:deploy/ukraine-db-data.volume",
+      "type": "config",
+      "name": "ukraine-db-data.volume",
+      "filePath": "deploy/ukraine-db-data.volume",
+      "summary": "systemd container volume unit declaring persistent storage for the PostgreSQL database container.",
+      "tags": [
+        "configuration",
+        "infrastructure",
+        "containerization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:deploy/ukraine-db.container",
+      "type": "service",
+      "name": "ukraine-db.container",
+      "filePath": "deploy/ukraine-db.container",
+      "summary": "systemd quadlet container unit running PostgreSQL 16 Alpine image with persistent volume, environment file for credentials, and host port 5433 mapping.",
+      "tags": [
+        "infrastructure",
+        "containerization",
+        "database",
+        "deployment"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Uses Podman systemd quadlet (.container) format for declarative container management with auto-restart on failure."
+    },
+    {
+      "id": "config:deploy/ukraine-db.env.example",
+      "type": "config",
+      "name": "ukraine-db.env.example",
+      "filePath": "deploy/ukraine-db.env.example",
+      "summary": "Template environment file for PostgreSQL container credentials, showing required variables (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB) with a password generation hint.",
+      "tags": [
+        "configuration",
+        "database",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:pipeline/backup_db.sh",
+      "type": "file",
+      "name": "backup_db.sh",
+      "filePath": "pipeline/backup_db.sh",
+      "summary": "Daily PostgreSQL backup script that dumps the ukraine_war database via podman exec, compresses with gzip, verifies the backup, and rotates to keep only the last 7 days.",
+      "tags": [
+        "database",
+        "backup",
+        "operations",
+        "shell-script"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:pipeline/daily_pipeline.py",
+      "type": "file",
+      "name": "daily_pipeline.py",
+      "filePath": "pipeline/daily_pipeline.py",
+      "summary": "Legacy monolithic daily pipeline runner that fetches data from 4 sources (WarSpotting, casualties, OSINT, RSS) using inline SQL via podman exec subprocess calls, with independent failure handling.",
+      "tags": [
+        "data-pipeline",
+        "etl",
+        "entry-point",
+        "legacy"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Self-contained pipeline with embedded psql helpers; each fetcher function is independent \u2014 one failure does not block others. Uses chr(39) for SQL string escaping."
+    },
+    {
+      "id": "function:pipeline/daily_pipeline.py:fetch_warspotting",
+      "type": "function",
+      "name": "fetch_warspotting",
+      "filePath": "pipeline/daily_pipeline.py",
+      "lineRange": [
+        24,
+        57
+      ],
+      "summary": "Fetches yesterday's equipment losses from WarSpotting API with pagination and inserts each loss individually into equipment_losses via SQL string interpolation.",
+      "tags": [
+        "api-client",
+        "data-fetch",
+        "equipment-losses"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:pipeline/daily_pipeline.py:fetch_casualties",
+      "type": "function",
+      "name": "fetch_casualties",
+      "filePath": "pipeline/daily_pipeline.py",
+      "lineRange": [
+        60,
+        82
+      ],
+      "summary": "Fetches Russian casualty figures via FlareSolverr from russian-casualties.in.ua, parses JSON from HTML, and upserts daily category counts into the casualties table.",
+      "tags": [
+        "api-client",
+        "data-fetch",
+        "casualties"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/daily_pipeline.py:fetch_rss",
+      "type": "function",
+      "name": "fetch_rss",
+      "filePath": "pipeline/daily_pipeline.py",
+      "lineRange": [
+        96,
+        114
+      ],
+      "summary": "Fetches articles from 4 RSS feeds (NYT, Guardian, Atlantic Council, FT), parses XML, and inserts titles and URLs into news_articles.",
+      "tags": [
+        "rss",
+        "data-fetch",
+        "news"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:pipeline/fetch_casualties.py",
+      "type": "file",
+      "name": "fetch_casualties.py",
+      "filePath": "pipeline/fetch_casualties.py",
+      "summary": "Standalone fetcher for Russian casualty data from russian-casualties.in.ua, using FlareSolverr to bypass Cloudflare protection and upserting daily category totals with dollar-quoting SQL escaping.",
+      "tags": [
+        "data-pipeline",
+        "casualties",
+        "api-client"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_casualties.py:fetch_via_flaresolverr",
+      "type": "function",
+      "name": "fetch_via_flaresolverr",
+      "filePath": "pipeline/fetch_casualties.py",
+      "lineRange": [
+        72,
+        92
+      ],
+      "summary": "Proxies an HTTP request through FlareSolverr (localhost:8191) to bypass Cloudflare JavaScript challenges, returning the response body.",
+      "tags": [
+        "api-client",
+        "proxy",
+        "cloudflare-bypass"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_casualties.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_casualties.py",
+      "lineRange": [
+        103,
+        158
+      ],
+      "summary": "Main entry point that fetches casualty JSON via FlareSolverr, parses the latest and previous day's data, and upserts category totals into the casualties table with change detection.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "casualties"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:pipeline/fetch_cisa_kev.py",
+      "type": "file",
+      "name": "fetch_cisa_kev.py",
+      "filePath": "pipeline/fetch_cisa_kev.py",
+      "summary": "Fetches the CISA Known Exploited Vulnerabilities catalog from a GitHub mirror, batch-upserting up to 500 vulnerability records per statement into the cisa_kev table.",
+      "tags": [
+        "data-pipeline",
+        "security",
+        "vulnerability",
+        "etl"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_cisa_kev.py:batch_upsert",
+      "type": "function",
+      "name": "batch_upsert",
+      "filePath": "pipeline/fetch_cisa_kev.py",
+      "lineRange": [
+        68,
+        125
+      ],
+      "summary": "Batch-inserts CISA vulnerability records in configurable batch sizes using multi-row INSERT with ON CONFLICT DO UPDATE for full record refresh.",
+      "tags": [
+        "database",
+        "bulk-insert",
+        "etl"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_cisa_kev.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_cisa_kev.py",
+      "lineRange": [
+        128,
+        142
+      ],
+      "summary": "Orchestrates the CISA KEV fetch pipeline: downloads the catalog, batch-upserts all vulnerabilities, and prints summary statistics.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:pipeline/fetch_missiles.py",
+      "type": "file",
+      "name": "fetch_missiles.py",
+      "filePath": "pipeline/fetch_missiles.py",
+      "summary": "Downloads the 'Massive Missile Attacks on Ukraine' dataset from Kaggle via kagglehub, parses CSV files for both attack events and missile/UAV reference data, and batch-upserts into missile_attacks and missiles_and_uavs tables.",
+      "tags": [
+        "data-pipeline",
+        "missile-attacks",
+        "kaggle",
+        "etl"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Uses kagglehub for dataset download, Python csv.DictReader for parsing, and manual SQL string escaping. Handles NaN, booleans, and JSON fields in CSV data."
+    },
+    {
+      "id": "function:pipeline/fetch_missiles.py:load_missile_attacks",
+      "type": "function",
+      "name": "load_missile_attacks",
+      "filePath": "pipeline/fetch_missiles.py",
+      "lineRange": [
+        115,
+        155
+      ],
+      "summary": "Parses missile_attacks_daily.csv into a list of cleaned row dictionaries, handling numeric, boolean, and JSON fields from the CSV.",
+      "tags": [
+        "data-parsing",
+        "csv",
+        "missile-attacks"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_missiles.py:batch_upsert_attacks",
+      "type": "function",
+      "name": "batch_upsert_attacks",
+      "filePath": "pipeline/fetch_missiles.py",
+      "lineRange": [
+        187,
+        223
+      ],
+      "summary": "Batch-inserts parsed missile attack records into the missile_attacks table in groups of 500 with ON CONFLICT DO NOTHING.",
+      "tags": [
+        "database",
+        "bulk-insert",
+        "etl"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_missiles.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_missiles.py",
+      "lineRange": [
+        260,
+        290
+      ],
+      "summary": "Orchestrates the missile data pipeline: downloads dataset, parses and upserts both attack records and UAV reference data, and prints before/after counts.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "missile-attacks"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:pipeline/fetch_osint.py",
+      "type": "file",
+      "name": "fetch_osint.py",
+      "filePath": "pipeline/fetch_osint.py",
+      "summary": "Fetches OSINT messages from OSINTukraine v2 API via FlareSolverr with Bearer token authentication, paginating through results and inserting into osint_messages with message-level deduplication.",
+      "tags": [
+        "data-pipeline",
+        "osint",
+        "api-client"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:pipeline/fetch_osint.py:fetch_page",
+      "type": "function",
+      "name": "fetch_page",
+      "filePath": "pipeline/fetch_osint.py",
+      "lineRange": [
+        104,
+        126
+      ],
+      "summary": "Fetches a single page of OSINT messages via FlareSolverr with retry logic (3 attempts) and 429 rate-limit handling.",
+      "tags": [
+        "api-client",
+        "pagination",
+        "retry"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_osint.py:insert_message",
+      "type": "function",
+      "name": "insert_message",
+      "filePath": "pipeline/fetch_osint.py",
+      "lineRange": [
+        129,
+        168
+      ],
+      "summary": "Inserts a single OSINT message record with channel metadata, content, sentiment, entities, and media info using idempotent ON CONFLICT DO NOTHING.",
+      "tags": [
+        "database",
+        "data-insert",
+        "osint"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_osint.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_osint.py",
+      "lineRange": [
+        171,
+        206
+      ],
+      "summary": "Main entry point that paginates through OSINTukraine API messages, inserting new records with configurable days-back and page-size parameters.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "pagination"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:pipeline/fetch_osm_military.py",
+      "type": "file",
+      "name": "fetch_osm_military.py",
+      "filePath": "pipeline/fetch_osm_military.py",
+      "summary": "Queries the OpenStreetMap Overpass API for military-tagged features within Ukraine's bounding box, converts elements to GeoJSON geometries, computes centroids, and batch-upserts into osm_military table.",
+      "tags": [
+        "data-pipeline",
+        "gis",
+        "osm",
+        "military"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Handles OSM node/way/relation element types with GeoJSON conversion (Point, LineString, Polygon, MultiPolygon) and centroid computation for each geometry."
+    },
+    {
+      "id": "function:pipeline/fetch_osm_military.py:overpass_to_geojson",
+      "type": "function",
+      "name": "overpass_to_geojson",
+      "filePath": "pipeline/fetch_osm_military.py",
+      "lineRange": [
+        84,
+        120
+      ],
+      "summary": "Converts an Overpass API element (node, way, or relation) to a GeoJSON geometry dict, handling closed ways as Polygons and multi-member relations as MultiPolygons.",
+      "tags": [
+        "gis",
+        "data-transform",
+        "geojson"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_osm_military.py:upsert_elements",
+      "type": "function",
+      "name": "upsert_elements",
+      "filePath": "pipeline/fetch_osm_military.py",
+      "lineRange": [
+        196,
+        222
+      ],
+      "summary": "Processes a list of Overpass elements, converts each to GeoJSON, computes centroid coordinates, and batch-upserts into osm_military with ON CONFLICT DO UPDATE.",
+      "tags": [
+        "database",
+        "gis",
+        "bulk-insert"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_osm_military.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_osm_military.py",
+      "lineRange": [
+        225,
+        240
+      ],
+      "summary": "Orchestrates the OSM military pipeline: queries Overpass API, upserts elements, and prints summary statistics.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "gis"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:pipeline/fetch_rss.py",
+      "type": "file",
+      "name": "fetch_rss.py",
+      "filePath": "pipeline/fetch_rss.py",
+      "summary": "Fetches articles from 5 RSS/Atom news feeds (NYT, Guardian, Atlantic Council, FT, Kyiv Independent), parses them via feedparser, deduplicates by URL, and batch-upserts into news_articles with content-hash change detection.",
+      "tags": [
+        "data-pipeline",
+        "rss",
+        "news",
+        "etl"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_rss.py:parse_entry",
+      "type": "function",
+      "name": "parse_entry",
+      "filePath": "pipeline/fetch_rss.py",
+      "lineRange": [
+        103,
+        160
+      ],
+      "summary": "Parses a feedparser entry into a structured news_articles row dict with title, content, SHA-256 content hash, categories, and metadata, filtering by date cutoff.",
+      "tags": [
+        "data-parsing",
+        "rss",
+        "deduplication"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_rss.py:batch_upsert",
+      "type": "function",
+      "name": "batch_upsert",
+      "filePath": "pipeline/fetch_rss.py",
+      "lineRange": [
+        163,
+        191
+      ],
+      "summary": "Batch-inserts deduplicated articles into news_articles with ON CONFLICT DO UPDATE only when content_hash differs, avoiding unnecessary writes.",
+      "tags": [
+        "database",
+        "bulk-insert",
+        "change-detection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_rss.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_rss.py",
+      "lineRange": [
+        194,
+        241
+      ],
+      "summary": "Main entry point that registers feed sources, fetches all RSS feeds, parses and deduplicates entries, batch-upserts, and prints statistics.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "rss"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:pipeline/fetch_viina.py",
+      "type": "file",
+      "name": "fetch_viina.py",
+      "filePath": "pipeline/fetch_viina.py",
+      "summary": "Downloads VIINA violent incident data from GitHub LFS, extracts CSV from ZIP archives, parses 44-column event records with boolean/numeric/date typing, and batch-upserts into viina_events table.",
+      "tags": [
+        "data-pipeline",
+        "viina",
+        "conflict-data",
+        "etl"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Handles Git LFS pointer file resolution via the GitHub LFS batch API to download actual data blobs. CSV has 44 columns including boolean event-type flags (t_mil_b, a_rus_b, etc.)."
+    },
+    {
+      "id": "function:pipeline/fetch_viina.py:download_lfs_file",
+      "type": "function",
+      "name": "download_lfs_file",
+      "filePath": "pipeline/fetch_viina.py",
+      "lineRange": [
+        69,
+        137
+      ],
+      "summary": "Downloads a file from GitHub that may be tracked by Git LFS, resolving the LFS pointer via batch API and falling back to direct download for non-LFS files.",
+      "tags": [
+        "download",
+        "git-lfs",
+        "api-client"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:pipeline/fetch_viina.py:parse_row",
+      "type": "function",
+      "name": "parse_row",
+      "filePath": "pipeline/fetch_viina.py",
+      "lineRange": [
+        188,
+        215
+      ],
+      "summary": "Parses a VIINA CSV row dict into a typed record, converting boolean flags, integers, floats, and dates from string representations.",
+      "tags": [
+        "data-parsing",
+        "csv",
+        "type-conversion"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_viina.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_viina.py",
+      "lineRange": [
+        246,
+        274
+      ],
+      "summary": "Orchestrates the VIINA pipeline: downloads data for the specified year, parses CSV rows, batch-upserts, and prints before/after counts.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "conflict-data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:pipeline/fetch_warspotting.py",
+      "type": "file",
+      "name": "fetch_warspotting.py",
+      "filePath": "pipeline/fetch_warspotting.py",
+      "summary": "Standalone daily fetcher for WarSpotting equipment losses, paginating the API with rate-limit delays and inserting individual records into equipment_losses using dollar-quoting SQL escaping with ON CONFLICT DO NOTHING.",
+      "tags": [
+        "data-pipeline",
+        "equipment-losses",
+        "api-client"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_warspotting.py:fetch_date",
+      "type": "function",
+      "name": "fetch_date",
+      "filePath": "pipeline/fetch_warspotting.py",
+      "lineRange": [
+        54,
+        114
+      ],
+      "summary": "Fetches all paginated equipment losses for a single date, checking for existing records before insert, with configurable date range support.",
+      "tags": [
+        "api-client",
+        "pagination",
+        "equipment-losses"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:pipeline/fetch_warspotting.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "pipeline/fetch_warspotting.py",
+      "lineRange": [
+        129,
+        154
+      ],
+      "summary": "Entry point that resolves the WarSpotting source ID, iterates over a configurable number of past days, and reports total inserted records.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "equipment-losses"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:pipeline/run_all.sh",
+      "type": "file",
+      "name": "run_all.sh",
+      "filePath": "pipeline/run_all.sh",
+      "summary": "Cron-triggered pipeline orchestrator that runs all fetch_* scripts sequentially, logs output, tracks pass/fail results, and optionally notifies Mattermost with a summary on completion.",
+      "tags": [
+        "data-pipeline",
+        "orchestration",
+        "cron",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:README.md",
+      "target": "document:PLAYBOOK.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:pipeline/daily_pipeline.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:DEPLOY.md",
+      "target": "file:pipeline/run_all.sh",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:PLAYBOOK.md",
+      "target": "file:pipeline/daily_pipeline.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:PLAYBOOK.md",
+      "target": "file:deploy/schema.sql",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:SOURCES.md",
+      "target": "file:pipeline/daily_pipeline.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:SOURCES.md",
+      "target": "document:PLAYBOOK.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:deploy/backload_warspotting.py",
+      "target": "function:deploy/backload_warspotting.py:fetch_page",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/backload_warspotting.py",
+      "target": "function:deploy/backload_warspotting.py:fetch_date",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/backload_warspotting.py",
+      "target": "function:deploy/backload_warspotting.py:insert_losses",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/backload_warspotting.py",
+      "target": "function:deploy/backload_warspotting.py:fetch_page",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:deploy/backload_warspotting.py",
+      "target": "function:deploy/backload_warspotting.py:fetch_date",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:deploy/backload_warspotting.py",
+      "target": "function:deploy/backload_warspotting.py:insert_losses",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:deploy/schema.sql",
+      "target": "table:deploy/schema.sql:sources",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/schema.sql",
+      "target": "table:deploy/schema.sql:equipment_losses",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/schema.sql",
+      "target": "table:deploy/schema.sql:casualties",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/schema.sql",
+      "target": "table:deploy/schema.sql:tech_mentions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/schema.sql",
+      "target": "table:deploy/schema.sql:territory_updates",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/schema.sql",
+      "target": "table:deploy/schema.sql:missile_attacks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/schema.sql",
+      "target": "table:deploy/schema.sql:daily_summaries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "service:deploy/ukraine-db.container",
+      "target": "file:deploy/schema.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:deploy/ukraine-db.container",
+      "target": "config:deploy/ukraine-db-data.volume",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:deploy/ukraine-db.container",
+      "target": "config:deploy/ukraine-db.env.example",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/daily_pipeline.py",
+      "target": "function:pipeline/daily_pipeline.py:fetch_warspotting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/daily_pipeline.py",
+      "target": "function:pipeline/daily_pipeline.py:fetch_casualties",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/daily_pipeline.py",
+      "target": "function:pipeline/daily_pipeline.py:fetch_rss",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/daily_pipeline.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/daily_pipeline.py",
+      "target": "table:deploy/schema.sql:equipment_losses",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:pipeline/daily_pipeline.py",
+      "target": "table:deploy/schema.sql:casualties",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:pipeline/fetch_casualties.py",
+      "target": "function:pipeline/fetch_casualties.py:fetch_via_flaresolverr",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_casualties.py",
+      "target": "function:pipeline/fetch_casualties.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_casualties.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_casualties.py",
+      "target": "table:deploy/schema.sql:casualties",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:pipeline/fetch_cisa_kev.py",
+      "target": "function:pipeline/fetch_cisa_kev.py:batch_upsert",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_cisa_kev.py",
+      "target": "function:pipeline/fetch_cisa_kev.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_cisa_kev.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_missiles.py",
+      "target": "function:pipeline/fetch_missiles.py:load_missile_attacks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_missiles.py",
+      "target": "function:pipeline/fetch_missiles.py:batch_upsert_attacks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_missiles.py",
+      "target": "function:pipeline/fetch_missiles.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_missiles.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_missiles.py",
+      "target": "table:deploy/schema.sql:missile_attacks",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:pipeline/fetch_osint.py",
+      "target": "function:pipeline/fetch_osint.py:fetch_page",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_osint.py",
+      "target": "function:pipeline/fetch_osint.py:insert_message",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_osint.py",
+      "target": "function:pipeline/fetch_osint.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_osint.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_osm_military.py",
+      "target": "function:pipeline/fetch_osm_military.py:overpass_to_geojson",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_osm_military.py",
+      "target": "function:pipeline/fetch_osm_military.py:upsert_elements",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_osm_military.py",
+      "target": "function:pipeline/fetch_osm_military.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_osm_military.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_rss.py",
+      "target": "function:pipeline/fetch_rss.py:parse_entry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_rss.py",
+      "target": "function:pipeline/fetch_rss.py:batch_upsert",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_rss.py",
+      "target": "function:pipeline/fetch_rss.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_rss.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_viina.py",
+      "target": "function:pipeline/fetch_viina.py:download_lfs_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_viina.py",
+      "target": "function:pipeline/fetch_viina.py:parse_row",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_viina.py",
+      "target": "function:pipeline/fetch_viina.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_viina.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_warspotting.py",
+      "target": "function:pipeline/fetch_warspotting.py:fetch_date",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_warspotting.py",
+      "target": "function:pipeline/fetch_warspotting.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:pipeline/fetch_warspotting.py",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/fetch_warspotting.py",
+      "target": "table:deploy/schema.sql:equipment_losses",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "file:pipeline/fetch_warspotting.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "file:pipeline/fetch_casualties.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "file:pipeline/fetch_cisa_kev.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "file:pipeline/fetch_rss.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "file:pipeline/fetch_viina.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "file:pipeline/fetch_missiles.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "service:deploy/ukraine-db.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pipeline/run_all.sh",
+      "target": "file:pipeline/backup_db.sh",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:documentation",
+      "name": "Documentation",
+      "description": "Project documentation including the README overview, deployment guide, operational playbook, and data sources catalog",
+      "nodeIds": [
+        "document:README.md",
+        "document:DEPLOY.md",
+        "document:PLAYBOOK.md",
+        "document:SOURCES.md"
+      ]
+    },
+    {
+      "id": "layer:infrastructure",
+      "name": "Infrastructure",
+      "description": "Database container deployment (Podman Quadlet), persistent storage volume, credentials, and the core PostgreSQL schema defining all 7 data tables",
+      "nodeIds": [
+        "service:deploy/ukraine-db.container",
+        "config:deploy/ukraine-db-data.volume",
+        "config:deploy/ukraine-db.env.example",
+        "file:deploy/schema.sql"
+      ]
+    },
+    {
+      "id": "layer:data-pipeline",
+      "name": "Data Pipeline",
+      "description": "ETL fetcher scripts for 8 data sources (equipment losses, casualties, OSINT, RSS news, missile attacks, OSM military, VIINA conflict events, CISA vulnerabilities) plus the legacy monolithic pipeline and one-time historical backfill utility",
+      "nodeIds": [
+        "file:deploy/backload_warspotting.py",
+        "file:pipeline/daily_pipeline.py",
+        "file:pipeline/fetch_casualties.py",
+        "file:pipeline/fetch_cisa_kev.py",
+        "file:pipeline/fetch_missiles.py",
+        "file:pipeline/fetch_osint.py",
+        "file:pipeline/fetch_osm_military.py",
+        "file:pipeline/fetch_rss.py",
+        "file:pipeline/fetch_viina.py",
+        "file:pipeline/fetch_warspotting.py"
+      ]
+    },
+    {
+      "id": "layer:operations",
+      "name": "Operations",
+      "description": "Cron-triggered pipeline orchestrator (run_all.sh) that executes all fetchers sequentially with pass/fail tracking and Mattermost notifications, plus the daily database backup script with 7-day rotation",
+      "nodeIds": [
+        "file:pipeline/run_all.sh",
+        "file:pipeline/backup_db.sh"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "The Ukraine War Tracker is an automated data pipeline that aggregates open-source intelligence from 8 distinct sources \u2014 equipment losses, casualties, missile attacks, conflict events, OSINT messages, military infrastructure, vulnerability data, and news feeds. Start here to understand the project's scope: 15 database tables, 722K+ rows, and a cron-driven pipeline that keeps everything current on a Hetzner VPS.",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Pipeline Orchestrator",
+      "description": "run_all.sh is the cron-triggered entry point that runs every fetcher script sequentially, logs each step's output, tracks pass/fail results, and optionally notifies Mattermost with a summary. Understanding this file reveals the full roster of active data pipelines and how they're coordinated \u2014 each fetcher runs independently so one failure doesn't block the others.",
+      "nodeIds": [
+        "file:pipeline/run_all.sh"
+      ],
+      "languageLesson": "Shell-based orchestrators like this use simple sequential execution with error trapping. Each fetch_* script is invoked independently, and the $? variable captures its exit code for the pass/fail tally \u2014 a pattern well-suited for cron-driven ETL where resilience matters more than throughput."
+    },
+    {
+      "order": 3,
+      "title": "Database Infrastructure",
+      "description": "Every pipeline script writes to a PostgreSQL 16 database running in a Podman container defined by the systemd quadlet unit. This container relies on a persistent volume for data storage and an environment file for credentials. The database is the single shared dependency across all fetchers \u2014 it's what ties the entire pipeline together.",
+      "nodeIds": [
+        "service:deploy/ukraine-db.container",
+        "config:deploy/ukraine-db-data.volume",
+        "config:deploy/ukraine-db.env.example"
+      ],
+      "languageLesson": "Podman systemd quadlets (.container files) let you define containers as systemd units without docker-compose. The container gets auto-restart on failure, journal logging via systemd, and integrates with the host's regular service management \u2014 ideal for single-host deployments."
+    },
+    {
+      "order": 4,
+      "title": "Database Schema",
+      "description": "The schema.sql file defines 7 core tables and 12 performance indexes that form the data model for the entire project. Every fetcher script in the pipeline writes into these tables using ON CONFLICT upserts for idempotency. The schema uses JSONB for raw data storage, TIMESTAMPTZ for timestamps, and foreign keys to a central sources registry that tracks where each data row originated.",
+      "nodeIds": [
+        "file:deploy/schema.sql"
+      ],
+      "languageLesson": "PostgreSQL's ON CONFLICT clause enables idempotent upserts \u2014 critical for pipeline scripts that may be re-run. JSONB columns store raw API responses alongside structured fields, giving you both queryability and a full audit trail of source data."
+    },
+    {
+      "order": 5,
+      "title": "Core Domain Tables",
+      "description": "These four tables represent the project's primary data domains. The sources table is the central registry every other table references via foreign key. equipment_losses stores individual WarSpotting loss records with geo-coordinates. casualties tracks daily Russian casualty figures by category. missile_attacks records attack events with drone and missile counts and damage levels.",
+      "nodeIds": [
+        "table:deploy/schema.sql:sources",
+        "table:deploy/schema.sql:equipment_losses",
+        "table:deploy/schema.sql:casualties",
+        "table:deploy/schema.sql:missile_attacks"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "Equipment Loss Pipeline",
+      "description": "The WarSpotting fetcher is the project's most important pipeline, paginating through a public API to collect individual equipment loss records with model details, geo-coordinates, and unit information. It inserts records using dollar-quoting SQL escaping with ON CONFLICT DO NOTHING for deduplication. This pipeline populates the largest and most granular table in the database.",
+      "nodeIds": [
+        "file:pipeline/fetch_warspotting.py",
+        "function:pipeline/fetch_warspotting.py:fetch_date",
+        "function:pipeline/fetch_warspotting.py:main"
+      ],
+      "languageLesson": "Dollar-quoting ($$...$$) in PostgreSQL is a way to embed literal strings without escaping single quotes \u2014 useful when raw JSON data contains arbitrary text. Combined with ON CONFLICT DO NOTHING, this pattern makes each pipeline run safely idempotent."
+    },
+    {
+      "order": 7,
+      "title": "Casualties & OSINT Pipelines",
+      "description": "These two fetchers handle human-sourced intelligence. The casualties pipeline bypasses Cloudflare protection via FlareSolverr to scrape Russian casualty figures, parsing JSON embedded in the HTML response. The OSINT pipeline connects to the OSINTukraine v2 API with Bearer token auth and retry logic, storing messages with sentiment analysis and entity extraction metadata.",
+      "nodeIds": [
+        "file:pipeline/fetch_casualties.py",
+        "function:pipeline/fetch_casualties.py:fetch_via_flaresolverr",
+        "file:pipeline/fetch_osint.py",
+        "function:pipeline/fetch_osint.py:fetch_page"
+      ],
+      "languageLesson": "FlareSolverr is a proxy server that solves Cloudflare JavaScript challenges \u2014 necessary when target sites use anti-bot protection. The fetcher sends requests through localhost:8191, which returns the fully-rendered page content after Cloudflare verification completes."
+    },
+    {
+      "order": 8,
+      "title": "Conflict Events & Missile Data",
+      "description": "These pipelines handle large-scale conflict datasets. fetch_viina downloads violent incident data from GitHub LFS, resolving pointer files via the LFS batch API and parsing 44-column CSV records with boolean event-type flags. fetch_missiles pulls the 'Massive Missile Attacks on Ukraine' dataset from Kaggle, parsing both attack events and UAV reference data into separate tables with batch upserts.",
+      "nodeIds": [
+        "file:pipeline/fetch_viina.py",
+        "function:pipeline/fetch_viina.py:download_lfs_file",
+        "function:pipeline/fetch_viina.py:parse_row",
+        "file:pipeline/fetch_missiles.py",
+        "function:pipeline/fetch_missiles.py:load_missile_attacks"
+      ],
+      "languageLesson": "Git LFS stores large files as small pointer files in the repository. To get actual data, you must resolve the pointer via the LFS batch API \u2014 the download_lfs_file function handles this transparently, falling back to direct download for non-LFS files."
+    },
+    {
+      "order": 9,
+      "title": "Security & News Feeds",
+      "description": "The CISA KEV fetcher downloads the Known Exploited Vulnerabilities catalog from a GitHub mirror and batch-upserts up to 500 records per statement for full vulnerability refreshes. The RSS fetcher aggregates articles from 5 major news sources (NYT, Guardian, Atlantic Council, FT, Kyiv Independent) using feedparser, with SHA-256 content-hash change detection to avoid unnecessary database writes when articles haven't actually changed.",
+      "nodeIds": [
+        "file:pipeline/fetch_cisa_kev.py",
+        "function:pipeline/fetch_cisa_kev.py:batch_upsert",
+        "file:pipeline/fetch_rss.py",
+        "function:pipeline/fetch_rss.py:parse_entry"
+      ],
+      "languageLesson": "Content-hash change detection (SHA-256 of article text) is a lightweight alternative to versioning \u2014 the batch_upsert only writes when the hash differs, preventing redundant updates to unchanged RSS articles even when the feed is re-fetched."
+    },
+    {
+      "order": 10,
+      "title": "GIS Military Infrastructure",
+      "description": "The OSM military fetcher queries the OpenStreetMap Overpass API for military-tagged features within Ukraine's bounding box. It handles all three OSM element types (nodes, ways, relations) and converts them to GeoJSON geometries \u2014 including computing centroids from complex Polygon and MultiPolygon shapes for spatial queries.",
+      "nodeIds": [
+        "file:pipeline/fetch_osm_military.py",
+        "function:pipeline/fetch_osm_military.py:overpass_to_geojson",
+        "function:pipeline/fetch_osm_military.py:upsert_elements"
+      ],
+      "languageLesson": "The Overpass API is a read-only API for querying OpenStreetMap data. Converting OSM's node/way/relation model to GeoJSON requires special handling \u2014 closed ways become Polygons, and relations with multiple members become MultiPolygons, with centroid computation for each resulting geometry."
+    },
+    {
+      "order": 11,
+      "title": "Operations & Deployment",
+      "description": "The backup script provides daily PostgreSQL dumps via podman exec, compresses with gzip, verifies integrity, and rotates to keep only the last 7 days. The deployment guide documents the full Hetzner VPS infrastructure \u2014 9 containers including the PostgreSQL database, all managed via Podman Quadlets with systemd integration.",
+      "nodeIds": [
+        "file:pipeline/backup_db.sh",
+        "document:DEPLOY.md"
+      ]
+    }
+  ],
+  "meta": {
+    "projectName": "ukraine-war-tracker",
+    "nodeCount": 54,
+    "edgeCount": 69,
+    "layerCount": 4,
+    "tourStepCount": 11
+  }
+}
