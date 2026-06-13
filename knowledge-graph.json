@@ -1,17 +1,37 @@
 {
+  "version": "1.0.0",
+  "project": {
+    "name": "ukraine-dashboard",
+    "languages": [
+      "python",
+      "sql",
+      "rust",
+      "html",
+      "javascript",
+      "shell"
+    ],
+    "frameworks": [
+      "axum",
+      "leaflet"
+    ],
+    "description": "Automated data pipeline tracking Ukraine war — equipment losses, casualties, OSINT, military infrastructure, missile attacks, cyber threats, and news. PostgreSQL-backed with 8+ automated data sources and 15 database tables. | Live dashboard tracking the war in Ukraine — Rust/Axum server serving interactive HTML dashboards with Leaflet.js maps, backed by PostgreSQL war data.",
+    "analyzedAt": "2026-06-13T15:18:28.739111+00:00",
+    "gitCommitHash": "d2f52fe007f7f5c511d761083c6f365573f36c42"
+  },
   "nodes": [
     {
       "id": "document:README.md",
       "type": "document",
       "name": "README.md",
       "filePath": "README.md",
-      "summary": "Project overview for the Ukraine War Tracker \u2014 an automated data pipeline tracking equipment losses, casualties, OSINT, military infrastructure, missile attacks, cyber threats, and news. Covers live DB status (15 tables, 722K+ rows), pipeline schedule, deployment info, and quick commands.",
+      "language": "markdown",
+      "summary": "Project documentation covering architecture (ASCII diagram showing RSS feeds → Python ingestion → PostgreSQL → Rust/Axum server → Cloudflare Tunnel → public URLs), database schema (15 tables, ~700K rows), news pipeline (4 sources), and deployment instructions.",
       "tags": [
         "documentation",
-        "entry-point",
-        "overview"
+        "architecture",
+        "readme"
       ],
-      "complexity": "moderate"
+      "complexity": "simple"
     },
     {
       "id": "document:DEPLOY.md",
@@ -293,7 +313,7 @@
         "legacy"
       ],
       "complexity": "complex",
-      "languageNotes": "Self-contained pipeline with embedded psql helpers; each fetcher function is independent \u2014 one failure does not block others. Uses chr(39) for SQL string escaping."
+      "languageNotes": "Self-contained pipeline with embedded psql helpers; each fetcher function is independent — one failure does not block others. Uses chr(39) for SQL string escaping."
     },
     {
       "id": "function:pipeline/daily_pipeline.py:fetch_warspotting",
@@ -828,6 +848,134 @@
         "monitoring"
       ],
       "complexity": "moderate"
+    },
+    {
+      "id": "file:src/main.rs",
+      "type": "file",
+      "name": "main.rs",
+      "filePath": "src/main.rs",
+      "language": "rust",
+      "summary": "Axum HTTP server — serves static dashboard HTML, JSON API endpoints for war data queries, and map data. Connects to PostgreSQL via sqlx, serves 15+ API routes for casualties, equipment, territory, missiles, sanctions, news, and briefings.",
+      "tags": [
+        "server",
+        "api",
+        "axum",
+        "web",
+        "entrypoint"
+      ],
+      "complexity": "complex",
+      "sizeLines": 1963
+    },
+    {
+      "id": "file:web/index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "web/index.html",
+      "language": "html",
+      "summary": "Main dashboard UI — dense data-rich layout with color-coded source badges, collapsible sections for casualties/equipment/territory/missiles/sanctions/news, clickable rows linking to full articles, and embedded interactive map.",
+      "tags": [
+        "frontend",
+        "dashboard",
+        "ui",
+        "html"
+      ],
+      "complexity": "complex",
+      "sizeLines": 1832
+    },
+    {
+      "id": "file:web/map.html",
+      "type": "file",
+      "name": "map.html",
+      "filePath": "web/map.html",
+      "language": "html",
+      "summary": "Interactive Leaflet.js map showing territorial control changes, conflict events, and military positions in Ukraine. Loads GeoJSON data from API endpoints and the ukraine-border.geojson file.",
+      "tags": [
+        "frontend",
+        "map",
+        "leaflet",
+        "geojson"
+      ],
+      "complexity": "moderate",
+      "sizeLines": 381
+    },
+    {
+      "id": "file:web/ukraine-border.geojson",
+      "type": "file",
+      "name": "ukraine-border.geojson",
+      "filePath": "web/ukraine-border.geojson",
+      "language": "json",
+      "summary": "Ukraine border GeoJSON data — polygon geometry defining Ukraine's international borders, used as the base layer for the interactive map.",
+      "tags": [
+        "data",
+        "geojson",
+        "map",
+        "border"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:Cargo.toml",
+      "type": "config",
+      "name": "Cargo.toml",
+      "filePath": "Cargo.toml",
+      "language": "toml",
+      "summary": "Rust package manifest — defines ukraine-dashboard crate, dependencies (axum 0.8, tokio, sqlx 0.8 with postgres, reqwest, serde, chrono, tower-http for CORS and static file serving).",
+      "tags": [
+        "config",
+        "rust",
+        "dependencies"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:deploy.sh",
+      "type": "file",
+      "name": "deploy.sh",
+      "filePath": "deploy.sh",
+      "language": "shell",
+      "summary": "Deployment script — git pulls on Hetzner, optionally rebuilds Rust binary with cargo build --release, restarts systemd service ukraine-dashboard.",
+      "tags": [
+        "deploy",
+        "script",
+        "ci"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/main.rs:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "src/main.rs",
+      "summary": "Application entry point — initializes tracing, connects to PostgreSQL via DATABASE_URL env var, builds Axum router with all API routes, serves static files from web/ directory, binds to port 8093.",
+      "tags": [
+        "entrypoint",
+        "server",
+        "bootstrap"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:deploy/ukraine-dashboard.service",
+      "type": "service",
+      "name": "ukraine-dashboard",
+      "summary": "Systemd user service running the Rust/Axum dashboard server on Hetzner VPS, port 8093. Exposed via Cloudflare Tunnel at ukraine.ogsapps.cc.",
+      "tags": [
+        "service",
+        "production",
+        "hetzner"
+      ]
+    },
+    {
+      "id": "concept:pipeline",
+      "type": "concept",
+      "name": "Data Pipeline",
+      "summary": "Python-based data ingestion pipeline that fetches war data from 13+ sources and populates the PostgreSQL database. Lives in the ukraine-war-tracker repository.",
+      "tags": [
+        "pipeline",
+        "data",
+        "cross-repo"
+      ],
+      "complexity": "complex"
     }
   ],
   "edges": [
@@ -1313,6 +1461,73 @@
       "type": "related",
       "direction": "forward",
       "weight": 0.5
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "config:Cargo.toml",
+      "type": "depends_on",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:web/index.html",
+      "type": "serves",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:web/map.html",
+      "type": "serves",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:web/ukraine-border.geojson",
+      "type": "serves",
+      "weight": 0.5
+    },
+    {
+      "source": "file:web/map.html",
+      "target": "file:web/ukraine-border.geojson",
+      "type": "depends_on",
+      "weight": 0.6
+    },
+    {
+      "source": "file:web/index.html",
+      "target": "file:web/map.html",
+      "type": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "document:README.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "file:deploy.sh",
+      "target": "file:src/main.rs",
+      "type": "deploys",
+      "weight": 0.7
+    },
+    {
+      "source": "file:deploy.sh",
+      "target": "service:deploy/ukraine-dashboard.service",
+      "type": "configures",
+      "weight": 0.6
+    },
+    {
+      "source": "function:src/main.rs:main",
+      "target": "file:src/main.rs",
+      "type": "contains",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "concept:pipeline",
+      "type": "depends_on",
+      "weight": 0.5,
+      "label": "queries DB populated by pipeline"
     }
   ],
   "layers": [
@@ -1363,13 +1578,50 @@
         "file:pipeline/run_all.sh",
         "file:pipeline/backup_db.sh"
       ]
+    },
+    {
+      "id": "layer:frontend",
+      "name": "Frontend",
+      "description": "Web UI — HTML dashboard and interactive Leaflet.js map served to users",
+      "nodeIds": [
+        "file:web/index.html",
+        "file:web/map.html",
+        "file:web/ukraine-border.geojson"
+      ]
+    },
+    {
+      "id": "layer:backend",
+      "name": "Backend",
+      "description": "Rust/Axum HTTP server — API endpoints, static file serving, PostgreSQL queries",
+      "nodeIds": [
+        "file:src/main.rs",
+        "function:src/main.rs:main"
+      ]
+    },
+    {
+      "id": "layer:config",
+      "name": "Configuration & Deployment",
+      "description": "Build config, deploy scripts, service definitions",
+      "nodeIds": [
+        "config:Cargo.toml",
+        "file:deploy.sh",
+        "service:deploy/ukraine-dashboard.service"
+      ]
+    },
+    {
+      "id": "layer:docs",
+      "name": "Documentation",
+      "description": "Project documentation and architecture overview",
+      "nodeIds": [
+        "document:README.md"
+      ]
     }
   ],
   "tour": [
     {
       "order": 1,
       "title": "Project Overview",
-      "description": "The Ukraine War Tracker is an automated data pipeline that aggregates open-source intelligence from 8 distinct sources \u2014 equipment losses, casualties, missile attacks, conflict events, OSINT messages, military infrastructure, vulnerability data, and news feeds. Start here to understand the project's scope: 15 database tables, 722K+ rows, and a cron-driven pipeline that keeps everything current on a Hetzner VPS.",
+      "description": "The Ukraine War Tracker is an automated data pipeline that aggregates open-source intelligence from 8 distinct sources — equipment losses, casualties, missile attacks, conflict events, OSINT messages, military infrastructure, vulnerability data, and news feeds. Start here to understand the project's scope: 15 database tables, 722K+ rows, and a cron-driven pipeline that keeps everything current on a Hetzner VPS.",
       "nodeIds": [
         "document:README.md"
       ]
@@ -1377,22 +1629,22 @@
     {
       "order": 2,
       "title": "Pipeline Orchestrator",
-      "description": "run_all.sh is the cron-triggered entry point that runs every fetcher script sequentially, logs each step's output, tracks pass/fail results, and optionally notifies Mattermost with a summary. Understanding this file reveals the full roster of active data pipelines and how they're coordinated \u2014 each fetcher runs independently so one failure doesn't block the others.",
+      "description": "run_all.sh is the cron-triggered entry point that runs every fetcher script sequentially, logs each step's output, tracks pass/fail results, and optionally notifies Mattermost with a summary. Understanding this file reveals the full roster of active data pipelines and how they're coordinated — each fetcher runs independently so one failure doesn't block the others.",
       "nodeIds": [
         "file:pipeline/run_all.sh"
       ],
-      "languageLesson": "Shell-based orchestrators like this use simple sequential execution with error trapping. Each fetch_* script is invoked independently, and the $? variable captures its exit code for the pass/fail tally \u2014 a pattern well-suited for cron-driven ETL where resilience matters more than throughput."
+      "languageLesson": "Shell-based orchestrators like this use simple sequential execution with error trapping. Each fetch_* script is invoked independently, and the $? variable captures its exit code for the pass/fail tally — a pattern well-suited for cron-driven ETL where resilience matters more than throughput."
     },
     {
       "order": 3,
       "title": "Database Infrastructure",
-      "description": "Every pipeline script writes to a PostgreSQL 16 database running in a Podman container defined by the systemd quadlet unit. This container relies on a persistent volume for data storage and an environment file for credentials. The database is the single shared dependency across all fetchers \u2014 it's what ties the entire pipeline together.",
+      "description": "Every pipeline script writes to a PostgreSQL 16 database running in a Podman container defined by the systemd quadlet unit. This container relies on a persistent volume for data storage and an environment file for credentials. The database is the single shared dependency across all fetchers — it's what ties the entire pipeline together.",
       "nodeIds": [
         "service:deploy/ukraine-db.container",
         "config:deploy/ukraine-db-data.volume",
         "config:deploy/ukraine-db.env.example"
       ],
-      "languageLesson": "Podman systemd quadlets (.container files) let you define containers as systemd units without docker-compose. The container gets auto-restart on failure, journal logging via systemd, and integrates with the host's regular service management \u2014 ideal for single-host deployments."
+      "languageLesson": "Podman systemd quadlets (.container files) let you define containers as systemd units without docker-compose. The container gets auto-restart on failure, journal logging via systemd, and integrates with the host's regular service management — ideal for single-host deployments."
     },
     {
       "order": 4,
@@ -1401,7 +1653,7 @@
       "nodeIds": [
         "file:deploy/schema.sql"
       ],
-      "languageLesson": "PostgreSQL's ON CONFLICT clause enables idempotent upserts \u2014 critical for pipeline scripts that may be re-run. JSONB columns store raw API responses alongside structured fields, giving you both queryability and a full audit trail of source data."
+      "languageLesson": "PostgreSQL's ON CONFLICT clause enables idempotent upserts — critical for pipeline scripts that may be re-run. JSONB columns store raw API responses alongside structured fields, giving you both queryability and a full audit trail of source data."
     },
     {
       "order": 5,
@@ -1423,7 +1675,7 @@
         "function:pipeline/fetch_warspotting.py:fetch_date",
         "function:pipeline/fetch_warspotting.py:main"
       ],
-      "languageLesson": "Dollar-quoting ($$...$$) in PostgreSQL is a way to embed literal strings without escaping single quotes \u2014 useful when raw JSON data contains arbitrary text. Combined with ON CONFLICT DO NOTHING, this pattern makes each pipeline run safely idempotent."
+      "languageLesson": "Dollar-quoting ($$...$$) in PostgreSQL is a way to embed literal strings without escaping single quotes — useful when raw JSON data contains arbitrary text. Combined with ON CONFLICT DO NOTHING, this pattern makes each pipeline run safely idempotent."
     },
     {
       "order": 7,
@@ -1435,7 +1687,7 @@
         "file:pipeline/fetch_osint.py",
         "function:pipeline/fetch_osint.py:fetch_page"
       ],
-      "languageLesson": "FlareSolverr is a proxy server that solves Cloudflare JavaScript challenges \u2014 necessary when target sites use anti-bot protection. The fetcher sends requests through localhost:8191, which returns the fully-rendered page content after Cloudflare verification completes."
+      "languageLesson": "FlareSolverr is a proxy server that solves Cloudflare JavaScript challenges — necessary when target sites use anti-bot protection. The fetcher sends requests through localhost:8191, which returns the fully-rendered page content after Cloudflare verification completes."
     },
     {
       "order": 8,
@@ -1448,7 +1700,7 @@
         "file:pipeline/fetch_missiles.py",
         "function:pipeline/fetch_missiles.py:load_missile_attacks"
       ],
-      "languageLesson": "Git LFS stores large files as small pointer files in the repository. To get actual data, you must resolve the pointer via the LFS batch API \u2014 the download_lfs_file function handles this transparently, falling back to direct download for non-LFS files."
+      "languageLesson": "Git LFS stores large files as small pointer files in the repository. To get actual data, you must resolve the pointer via the LFS batch API — the download_lfs_file function handles this transparently, falling back to direct download for non-LFS files."
     },
     {
       "order": 9,
@@ -1460,39 +1712,63 @@
         "file:pipeline/fetch_rss.py",
         "function:pipeline/fetch_rss.py:parse_entry"
       ],
-      "languageLesson": "Content-hash change detection (SHA-256 of article text) is a lightweight alternative to versioning \u2014 the batch_upsert only writes when the hash differs, preventing redundant updates to unchanged RSS articles even when the feed is re-fetched."
+      "languageLesson": "Content-hash change detection (SHA-256 of article text) is a lightweight alternative to versioning — the batch_upsert only writes when the hash differs, preventing redundant updates to unchanged RSS articles even when the feed is re-fetched."
     },
     {
       "order": 10,
       "title": "GIS Military Infrastructure",
-      "description": "The OSM military fetcher queries the OpenStreetMap Overpass API for military-tagged features within Ukraine's bounding box. It handles all three OSM element types (nodes, ways, relations) and converts them to GeoJSON geometries \u2014 including computing centroids from complex Polygon and MultiPolygon shapes for spatial queries.",
+      "description": "The OSM military fetcher queries the OpenStreetMap Overpass API for military-tagged features within Ukraine's bounding box. It handles all three OSM element types (nodes, ways, relations) and converts them to GeoJSON geometries — including computing centroids from complex Polygon and MultiPolygon shapes for spatial queries.",
       "nodeIds": [
         "file:pipeline/fetch_osm_military.py",
         "function:pipeline/fetch_osm_military.py:overpass_to_geojson",
         "function:pipeline/fetch_osm_military.py:upsert_elements"
       ],
-      "languageLesson": "The Overpass API is a read-only API for querying OpenStreetMap data. Converting OSM's node/way/relation model to GeoJSON requires special handling \u2014 closed ways become Polygons, and relations with multiple members become MultiPolygons, with centroid computation for each resulting geometry."
+      "languageLesson": "The Overpass API is a read-only API for querying OpenStreetMap data. Converting OSM's node/way/relation model to GeoJSON requires special handling — closed ways become Polygons, and relations with multiple members become MultiPolygons, with centroid computation for each resulting geometry."
     },
     {
       "order": 11,
       "title": "Operations & Deployment",
-      "description": "The backup script provides daily PostgreSQL dumps via podman exec, compresses with gzip, verifies integrity, and rotates to keep only the last 7 days. The deployment guide documents the full Hetzner VPS infrastructure \u2014 9 containers including the PostgreSQL database, all managed via Podman Quadlets with systemd integration.",
+      "description": "The backup script provides daily PostgreSQL dumps via podman exec, compresses with gzip, verifies integrity, and rotates to keep only the last 7 days. The deployment guide documents the full Hetzner VPS infrastructure — 9 containers including the PostgreSQL database, all managed via Podman Quadlets with systemd integration.",
       "nodeIds": [
         "file:pipeline/backup_db.sh",
         "document:DEPLOY.md"
       ]
+    },
+    {
+      "order": 12,
+      "title": "Application Entry Point",
+      "description": "The Rust Axum server bootstraps here — connects to PostgreSQL, builds the router, serves the dashboard.",
+      "nodeIds": [
+        "file:src/main.rs",
+        "function:src/main.rs:main"
+      ]
+    },
+    {
+      "order": 13,
+      "title": "Dashboard UI",
+      "description": "The main dashboard page — dense data-rich layout with collapsible sections for all war data categories.",
+      "nodeIds": [
+        "file:web/index.html"
+      ]
+    },
+    {
+      "order": 14,
+      "title": "Interactive Map",
+      "description": "Leaflet.js map showing territorial control, conflict events, and military positions across Ukraine.",
+      "nodeIds": [
+        "file:web/map.html",
+        "file:web/ukraine-border.geojson"
+      ]
+    },
+    {
+      "order": 15,
+      "title": "Deployment",
+      "description": "How the dashboard gets deployed to Hetzner — git pull, cargo build, systemd restart.",
+      "nodeIds": [
+        "file:deploy.sh",
+        "service:deploy/ukraine-dashboard.service",
+        "config:Cargo.toml"
+      ]
     }
-  ],
-  "version": "1.0.0",
-  "project": {
-    "name": "ukraine-war-tracker",
-    "languages": [
-      "python",
-      "sql"
-    ],
-    "frameworks": [],
-    "description": "Automated data pipeline tracking Ukraine war \u2014 equipment losses, casualties, OSINT, military infrastructure, missile attacks, cyber threats, and news. PostgreSQL-backed with 8+ automated data sources and 15 database tables.",
-    "analyzedAt": "2026-06-09T16:00:24-07:00",
-    "gitCommitHash": "93beeb6da511d02347c6e06f93472419c05bfd38"
-  }
+  ]
 }
