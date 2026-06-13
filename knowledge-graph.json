@@ -1483,11 +1483,16 @@
       ]
     }
   ],
-  "meta": {
-    "projectName": "ukraine-war-tracker",
-    "nodeCount": 54,
-    "edgeCount": 69,
-    "layerCount": 4,
-    "tourStepCount": 11
+  "version": "1.0.0",
+  "project": {
+    "name": "ukraine-war-tracker",
+    "languages": [
+      "python",
+      "sql"
+    ],
+    "frameworks": [],
+    "description": "Automated data pipeline tracking Ukraine war \u2014 equipment losses, casualties, OSINT, military infrastructure, missile attacks, cyber threats, and news. PostgreSQL-backed with 8+ automated data sources and 15 database tables.",
+    "analyzedAt": "2026-06-09T16:00:24-07:00",
+    "gitCommitHash": "93beeb6da511d02347c6e06f93472419c05bfd38"
   }
 }
